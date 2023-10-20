@@ -23,8 +23,8 @@ contract GasContract {
 
     struct Payment {
         PaymentType paymentType;
-        uint256 paymentID;
         bool adminUpdated;
+        uint256 paymentID;
         string recipientName; // max 8 characters
         address recipient;
         address admin; // administrators address
@@ -117,14 +117,6 @@ contract GasContract {
         }
     }
 
-    // function getPaymentHistory()
-    //     public
-    //     payable
-    //     returns (History[] memory paymentHistory_)
-    // {
-    //     return paymentHistory;
-    // }
-
     function checkForAdmin(address _user) public view returns (bool admin_) {
         bool admin = false;
         for (uint256 ii = 0; ii < administrators.length; ii++) {
@@ -136,48 +128,14 @@ contract GasContract {
     }
 
     function balanceOf(address _user) public view returns (uint256 balance_) {
-        uint256 balance = balances[_user];
-        return balance;
-    }
-
-    function getTradingMode() public view returns (bool mode_) {
-        return true;
-    }
-
-
-    function addHistory(address _updateAddress, bool _tradeMode)
-        public
-        returns (bool status_, bool tradeMode_)
-    {
-        History memory history;
-        history.blockNumber = block.number;
-        history.lastUpdate = block.timestamp;
-        history.updatedBy = _updateAddress;
-        // paymentHistory.push(history);
-        bool[] memory status = new bool[](tradePercent);
-        for (uint256 i = 0; i < tradePercent; i++) {
-            status[i] = true;
-        }
-        return ((status[0] == true), _tradeMode);
-    }
-
-    function getPayments(address _user)
-        public
-        view
-        returns (Payment[] memory payments_)
-    {
-        require(
-            _user != address(0),
-            "Gas Contract - getPayments function - User must have a valid non zero address"
-        );
-        return payments[_user];
+        return balances[_user];
     }
 
     function transfer(
         address _recipient,
         uint256 _amount,
         string calldata _name
-    ) public returns (bool status_) {
+    ) public {
         address senderOfTx = msg.sender;
         require(
             balances[senderOfTx] >= _amount,
@@ -199,51 +157,49 @@ contract GasContract {
         payment.recipientName = _name;
         payment.paymentID = ++paymentCounter;
         payments[senderOfTx].push(payment);
-        bool[] memory status = new bool[](tradePercent);
-        for (uint256 i = 0; i < tradePercent; i++) {
-            status[i] = true;
-        }
-        return (status[0] == true);
+        // bool[] memory status = new bool[](tradePercent);
+        // for (uint256 i = 0; i < tradePercent; i++) {
+        //     status[i] = true;
+        // }
+        // return (status[0] == true);
     }
 
-    function updatePayment(
-        address _user,
-        uint256 _ID,
-        uint256 _amount,
-        PaymentType _type
-    ) public onlyAdminOrOwner {
-        require(
-            _ID > 0,
-            "Gas Contract - Update Payment function - ID must be greater than 0"
-        );
-        require(
-            _amount > 0,
-            "Gas Contract - Update Payment function - Amount must be greater than 0"
-        );
-        require(
-            _user != address(0),
-            "Gas Contract - Update Payment function - Administrator must have a valid non zero address"
-        );
+    // function updatePayment(
+    //     address _user,
+    //     uint256 _ID,
+    //     uint256 _amount,
+    //     PaymentType _type
+    // ) public onlyAdminOrOwner {
+    //     require(
+    //         _ID > 0,
+    //         "Gas Contract - Update Payment function - ID must be greater than 0"
+    //     );
+    //     require(
+    //         _amount > 0,
+    //         "Gas Contract - Update Payment function - Amount must be greater than 0"
+    //     );
+    //     require(
+    //         _user != address(0),
+    //         "Gas Contract - Update Payment function - Administrator must have a valid non zero address"
+    //     );
 
-        address senderOfTx = msg.sender;
+    //     address senderOfTx = msg.sender;
 
-        for (uint256 ii = 0; ii < payments[_user].length; ii++) {
-            if (payments[_user][ii].paymentID == _ID) {
-                payments[_user][ii].adminUpdated = true;
-                payments[_user][ii].admin = _user;
-                payments[_user][ii].paymentType = _type;
-                payments[_user][ii].amount = _amount;
-                bool tradingMode = getTradingMode();
-                addHistory(_user, tradingMode);
-                emit PaymentUpdated(
-                    senderOfTx,
-                    _ID,
-                    _amount,
-                    payments[_user][ii].recipientName
-                );
-            }
-        }
-    }
+    //     for (uint256 ii = 0; ii < payments[_user].length; ii++) {
+    //         if (payments[_user][ii].paymentID == _ID) {
+    //             payments[_user][ii].adminUpdated = true;
+    //             payments[_user][ii].admin = _user;
+    //             payments[_user][ii].paymentType = _type;
+    //             payments[_user][ii].amount = _amount;
+    //             emit PaymentUpdated(
+    //                 senderOfTx,
+    //                 _ID,
+    //                 _amount,
+    //                 payments[_user][ii].recipientName
+    //             );
+    //         }
+    //     }
+    // }
 
     function addToWhitelist(address _userAddrs, uint256 _tier)
         public
