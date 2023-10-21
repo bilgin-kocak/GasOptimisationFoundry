@@ -102,13 +102,9 @@ contract GasContract {
                 administrators[ii] = _admins[ii];
                 if (_admins[ii] == _contractOwner) {
                     balances[_contractOwner] = _totalSupply;
-                } else {
-                    balances[_admins[ii]] = 0;
-                }
+                } 
                 if (_admins[ii] == _contractOwner) {
                     emit supplyChanged(_admins[ii], _totalSupply);
-                } else if (_admins[ii] != _contractOwner) {
-                    emit supplyChanged(_admins[ii], 0);
                 }
             }
         }
