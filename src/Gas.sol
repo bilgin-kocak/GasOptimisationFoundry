@@ -54,37 +54,33 @@ contract GasContract {
     modifier onlyAdminOrOwner() {
         address senderOfTx = msg.sender;
         if (checkForAdmin(senderOfTx)) {
-            require(
-                checkForAdmin(senderOfTx),
-                "Gas Contract Only Admin Check-  Caller not admin"
-            );
             _;
         } else if (senderOfTx == contractOwner) {
             _;
         } else {
             revert(
-                "Error in Gas contract - onlyAdminOrOwner modifier : revert happened because the originator of the transaction was not the admin, and furthermore he wasn't the owner of the contract, so he cannot run this function"
+                "onlyAdminOrOwner"
             );
         }
     }
 
-    modifier checkIfWhiteListed(address sender) {
-        address senderOfTx = msg.sender;
-        require(
-            senderOfTx == sender,
-            "Gas Contract CheckIfWhiteListed modifier : revert happened because the originator of the transaction was not the sender"
-        );
-        uint256 usersTier = whitelist[senderOfTx];
-        require(
-            usersTier > 0,
-            "Gas Contract CheckIfWhiteListed modifier : revert happened because the user is not whitelisted"
-        );
-        require(
-            usersTier < 4,
-            "Gas Contract CheckIfWhiteListed modifier : revert happened because the user's tier is incorrect, it cannot be over 4 as the only tier we have are: 1, 2, 3; therfore 4 is an invalid tier for the whitlist of this contract. make sure whitlist tiers were set correctly"
-        );
-        _;
-    }
+    // modifier checkIfWhiteListed(address sender) {
+    //     address senderOfTx = msg.sender;
+    //     require(
+    //         senderOfTx == sender,
+    //         "Gas Contract CheckIfWhiteListed modifier : revert happened because the originator of the transaction was not the sender"
+    //     );
+    //     // uint256 usersTier = whitelist[senderOfTx];
+    //     // require(
+    //     //     usersTier > 0,
+    //     //     "Gas Contract CheckIfWhiteListed modifier : revert happened because the user is not whitelisted"
+    //     // );
+    //     // require(
+    //     //     usersTier < 4,
+    //     //     "Gas Contract CheckIfWhiteListed modifier : revert happened because the user's tier is incorrect, it cannot be over 4 as the only tier we have are: 1, 2, 3; therfore 4 is an invalid tier for the whitlist of this contract. make sure whitlist tiers were set correctly"
+    //     // );
+    //     _;
+    // }
 
     event supplyChanged(address indexed, uint256 indexed);
     event Transfer(address recipient, uint256 amount);
@@ -97,20 +93,21 @@ contract GasContract {
     event WhiteListTransfer(address indexed);
 
     constructor(address[] memory _admins, uint256 _totalSupply) {
-        contractOwner = msg.sender;
+        address _contractOwner = msg.sender;
+        contractOwner = _contractOwner;
         totalSupply = _totalSupply;
 
         for (uint256 ii = 0; ii < administrators.length; ii++) {
             if (_admins[ii] != address(0)) {
                 administrators[ii] = _admins[ii];
-                if (_admins[ii] == contractOwner) {
-                    balances[contractOwner] = _totalSupply;
+                if (_admins[ii] == _contractOwner) {
+                    balances[_contractOwner] = _totalSupply;
                 } else {
                     balances[_admins[ii]] = 0;
                 }
-                if (_admins[ii] == contractOwner) {
+                if (_admins[ii] == _contractOwner) {
                     emit supplyChanged(_admins[ii], _totalSupply);
-                } else if (_admins[ii] != contractOwner) {
+                } else if (_admins[ii] != _contractOwner) {
                     emit supplyChanged(_admins[ii], 0);
                 }
             }
@@ -118,13 +115,12 @@ contract GasContract {
     }
 
     function checkForAdmin(address _user) public view returns (bool admin_) {
-        bool admin = false;
         for (uint256 ii = 0; ii < administrators.length; ii++) {
             if (administrators[ii] == _user) {
-                admin = true;
+                return true;
             }
         }
-        return admin;
+        return false;
     }
 
     function balanceOf(address _user) public view returns (uint256 balance_) {
@@ -139,11 +135,11 @@ contract GasContract {
         address senderOfTx = msg.sender;
         require(
             balances[senderOfTx] >= _amount,
-            "Gas Contract - Transfer function - Sender has insufficient Balance"
+            "insufficientBalance"
         );
         require(
             bytes(_name).length < 9,
-            "Gas Contract - Transfer function -  The recipient name is too long, there is a max length of 8 characters"
+            "nameLengthGreaterThan9"
         );
         balances[senderOfTx] -= _amount;
         balances[_recipient] += _amount;
@@ -207,7 +203,7 @@ contract GasContract {
     {
         require(
             _tier < 255,
-            "Gas Contract - addToWhitelist function -  tier level should not be greater than 255"
+            "TierBiggerThan255"
         );
         
         if (_tier > 3) {
@@ -231,17 +227,17 @@ contract GasContract {
     function whiteTransfer(
         address _recipient,
         uint256 _amount
-    ) public checkIfWhiteListed(msg.sender) {
+    ) public {
         address senderOfTx = msg.sender;
         whiteListStruct[senderOfTx] = ImportantStruct(_amount, true);
         
         require(
             balances[senderOfTx] >= _amount,
-            "Gas Contract - whiteTransfers function - Sender has insufficient Balance"
+            "insufficientBalance"
         );
         require(
             _amount > 3,
-            "Gas Contract - whiteTransfers function - amount to send have to be bigger than 3"
+            "amountSmallerThan3"
         );
         balances[senderOfTx] -= _amount;
         balances[_recipient] += _amount;
